@@ -1,0 +1,267 @@
+
+Why Kafka
+
+	Problems organisation are facing with the previous architecture
+	
+	1. If you have 4 source systmes and 6 target systems , you need to write 24 integrations
+	2. Each integration comes with difficulties
+		like 
+		protocol  - how the data is transported (TCP,HTTP,REST,FTP)
+		Data format - how the data is parsed.
+		(Binary,JSON,CSV)
+	3. Each source system will have an increased load from the connection.
+	
+Decoupling of data streams and systems.
+
+What is Kafka?
+	kafka is a distributed straming platfom that is used publish and subscribe to stream of records.
+	Apache Kafka is a fast, scalable, fault-tolerant messaging system which enables communication between producers and consumers using message-based topics.
+	Moreover, this technology takes place of conventional message brokers like JMS, AMQP with the ability to give higher throughput, reliability, and replication.
+
+History of apache kafka
+previously developed by linkedin.
+
+Benefits ::
+High throughput
+low latency
+High Concurrency
+	--> Kafka is able to handle thousands of messages per second and that too in low latency conditions with high throughput. In addition, it permits the reading and writing of messages into it at high concurrency.
+	
+Fault-tolerance
+	--> resilient architecture. best advantage is fault tolerance.
+	--> Apache Kafka is able to maintain the fault-tolerance. Fault-tolerance means that sometimes a consumer successfully consumes the message that was delivered by the producer. But, the consumer fails to process the message back due to backend database failure, or due to presence of a bug in the consumer code. In such a situation, the consumer is unable to consume the message again. Consequently, Apache Kafka has resolved the problem by reprocessing the data.
+Durability
+	--> multiple replicas across brokers hence msg is always durable and distributed
+Distributed
+Scalabiltity
+	--> Kafka cluster has multiple broker. so even iff one of the node is down, we can scale it to one more node.
+
+Resilient Architecture	
+	--> Apache Kafka has a resilient architecture which has resolved unusual complications in data sharing.
+	--> Organizations such as NETFLIX, UBER, Walmart, etc. and over thousands of such firms make use of Apache Kafka.
+
+
+
+Kafka Architecture
+
+1. kafka Broker
+	=> a kafka server, kafka broker and a kafka node all refer to the same concept and are synonyms.
+	=> a kafka broker receivves messages from producers and stores them on desk keyed by unique offset.
+	=> a kafka broker allows consumers to fetch messages by topic, partiitons and offset.
+	=> kafka broker can handle TB of messages. can handle hundread of thousands of read and writes per second.
+	=> kafka brokers can create a kafka cluster by sharing information between each other directly or indirectly using zookeeper.
+	=> to maintain load balnce kafka cluster typically consists of multiple brokers.
+	=> however, these are stateless, hhence for maintaining cluster state they use zookeeper.
+
+Kafka - ZooKeeper
+	=> ZooKeeper is a distributed, open source configuration, synchronization service along with naming registry for distributed application. 
+	=> KB 
+		1. State -> Zookeeper determines the state. That means, it notices, if the Kafka Broker is alive, always when it regularly sends heartbeats requests.
+		2. Quotas -> Any consumer distinguished by clientId/consumer group will get throttled if it fetches more bytes than this value per-second.
+		3.  Replicas -> However, for each topic, Zookeeper in Kafka keeps a set of in-sync replicas (ISR). Moreover, if somehow previously selected leader node fails then on the basis of currently live nodes Apache ZooKeeper will elect the new leader.
+		4. Nodes and Topics Registry -> Basically, Zookeeper in Kafka stores nodes and topic registries. It is possible to find there all available brokers in Kafka and, more precisely, which Kafka topics are held by each broker.
+		
+	=> Consumers
+		1.Offsets -> ZooKeeper is the default storage engine, for consumer offsets, in Kafka’s 0.9.1 release. However, all information about how many messages Kafka consumer consumes by each consumer is stored in ZooKeeper.
+		2. ZooKeeper notifies the producer or consumer about the presence of any new broker or failure of broker in the kafka system.
+
+Kafka Producers
+	=> Producers in kafka push data to brokers. automatically sends a message to that new broker, exactly when the new broker starts.
+
+Kafka Consumers
+	=> by using partition offset the kafka consumer maintains that how many messages have been consumed because kafka brokers are stateless.
+
+Kafka Topics
+	=> the topic is a logical channel to which producer publish message and from which the consumer recevies the message.
+	=> topic defines the stream of a particular type/classification of data.
+
+Partitions
+	=> in a kafka cluster, topics are split into partitions and also replicated across borders.
+	=> to which partition a published message will be written, there is no guarantee about that.
+	=> we can add a key to a message. Basically, we will get ensured that all these messages (with the same key) will end up in the same partition if a producer publishes a message with a key. Due to this feature, Kafka offers message sequencing guarantee. Though, unless a key is added to it, data is written to partitions randomly.
+	=> each message is assigned an incremental id, also called offset. However, only within the partition, these offsets are meaningful. Moreover, in a topic, it does not have any value across partitions.
+
+Topic replication factor.
+	=> In Kafka, each broker contains some sort of data. But, what if the broker or the machine fails down? The data will be lost. Precautionary, Apache Kafka enables a feature of replication to secure data loss even when a broker fails down. To do so, a replication factor is created for the topics contained in any particular broker. A replication factor is the number of copies of data over multiple brokers. The replication factor value should be greater than 1 always (between 2 or 3). This helps to store a replica of the data in another broker from where the user can access it.
+	=> while creating a topic, we can set replication factor of topic.
+	=> Replication takes place in the partition level only.
+	=> For a given partition, only one broker can be a leader, at a time. Meanwhile, other brokers will have in-sync replica; what we call ISR.
+	=> It is not possible to have the number of replication factor more than the number of available brokers.
+	
+Consumer group
+	=> one consumer group will have one unique group-id.
+	=> A consumer group is a group of multiple consumers which visions to an application basically. 
+	=> Each consumer present in a group reads data directly from the exclusive partitions. 
+	=> In case, the number of consumers are more than the number of partitions, some of the consumers will be in an inactive state. 
+	=> Somehow, if we lose any active consumer within the group then the inactive one can takeover and will come in an active state to read the data.
+	
+Consumer Offsets
+	=> Apache Kafka provides a convenient feature to store an offset value for a consumer group. 
+	=> It stores an offset value to know at which partition, the consumer group is reading the data. As soon as a consumer in a group reads data, Kafka automatically commits the offsets, or it can be programmed. 
+	=> These offsets are committed live in a topic known as __consumer_offsets. 
+	=> This feature was implemented in the case of a machine failure where a consumer fails to read the data. So, the consumer will be able to continue reading from where it left off due to the commitment of the offset.
+
+Delivery Semantics
+	=> The choice of commitment depends on the consumer, i.e., when the consumer wishes to commit the offsets. Committing an offset is like a bookmark which a reader uses while reading a book or a novel.
+
+	=> In Kafka, there are following three delivery semantics used:
+
+	=> At most once: Here, the offsets are committed as soon as the consumer receives the message.. But in case of incorrect processing, the message will be lost, and the consumer will not be able to read further. Therefore, this semantic is the least preferred one.
+	
+	=> At least once: Here, the offsets are committed after the message has been processed. If the processing goes wrong, then the message will be read again by the consumer. Therefore, this is usually preferred to use. Because a consumer can read the message twice, it results in duplicate processing of the messages. Thus, it needs a system to be an idempotent system.
+	
+	=> Exactly once: Here, the offsets can be achieved for Kafka to Kafka workflow only using the Kafka Streams API. For achieving offset for Kafka to the external system, we need to use an idempotent consumer.
+
+
+Producers advanced configuration.
+1. acks=0
+	acks=1
+	acks=all in conjunction with min.insync.replicas 
+	min.insync.replicas can be set at broker or topic level.
+	min.insync.replicas = 2 means atleast 2 brokers that are ISR including leader must respond that they have data.
+	That means if you use replication-factor=3, min.insync=2,acks=all, you can tolerate only one broker down, otherwise the producer will receive an exception.(NotEnoughReplicasException)
+
+2. retries
+	retries default to Integer.MAX_INT
+	retry.backoff.ms setting is by default to 100ms. after every 100ms retry the call.
+	producer timeout sec -> delivery.timeout.ms = 120000ms
+	Producer Retries Warning.
+		in case of retries there is a chance that messages will be sent out of order(if a batch has filed to be sent).
+		if you rely on key-based ordering that can be an issue.
+		
+		how many produce request can be made in parallel.
+		max.in.flight.request.per.connection
+			default = 5
+			set it to 1 if you need to ensure ordering(may imapact thoughput)
+
+3. Idempotent producer (all the setting are applied automatically when producer starts, you dont have to set it manually)
+	enable.idempotence = true
+	while keeping ordering guarantees and improving performance.
+	
+4. Message compression
+	compression.type= none (default) but can be gzip,lz4,snappy
+	producer sends the data in the format json or text most of the time.
+	message compression will be helpful if we sent 100message batch to kafka.
+	Adv:
+		much smaller producer request size (compression ratio upto 4x!)
+		less latency in network
+		better disk utilization in kafka.
+	DisAdv:
+		producer/consumer must commit some CPU cycles to compress/decompress the data.
+	
+5. Linger.ms and Batch.size
+		By default, kafka tries to send record asap.
+		it will have upto 5 request in flight,meaning  msgs send individually in parallel.
+		if more msgs has to be sent,kafka is smart and start batching
+		
+		linger.ms -> number of ms producer willing to wait before sending a batch out.
+					-> if a batch is full before the end of linger.ms, producer will send the msg.
+		
+		batch.size -> maximum number of bytes that will be included in batch(16kb)
+					any msg bigger than batch will not be batched.
+
+6. Max.block.ms and buffer.memory
+		if the producer produces faster than the broker can take, the records will be buffered in memory.
+		buffer.memory = 32mb by default.
+		if that buffer is full, then that .send() method will start to block.
+		max.block.ms=60000ms until throwing an exception.
+		Exception will be thrown when	
+			producer has filled up its buffer.
+			broker not accepting new data
+			60 sec has elapsed.
+			
+Consumer Advanced Configuration
+1. Delivery Semantics:
+	At most once: offsets are committed as soon as the message batch is received. if the processing goes wrong, the message will be lost.
+	At least once: offsets are committed after the message is processed.if the processing goes wrong , the message will be read again.but there is chance of duplicate processing of msg.make sure processing is idempotent.
+	
+2. Poll Records
+	fetch.min.bytes=> controls how much data you want to pull at least on each request.
+	max.poll.records=>controls how much data you want to pull on each poll request.
+	max.partitions.fetch.bytes=>maximum data returned by the broker per partition.
+	fetch.max.bytes=>maximum data returned for each fetch request.(covers multiple partitions)
+	
+Consumer Offset commit strategies
+	enable.auto.commit=true and synchronous processing of msgs
+			auto.commit.interval.ms=1000>>offsets will be committed automatically for you ate regular interval.
+	enable.auto.commit=false and manually commit the msg and synchronous processing of msgs
+	
+Consumer offset reset behavior
+	auto.offset.reset=latest/earliest/none
+	offset.retention.minutes
+	
+	
+		
+
+=======================================================================================
+	
+	kafka-console-consumer --bootstrap-server localhost:9092 ^
+    --topic color-count-output ^
+    --from-beginning ^
+    --formatter kafka.tools.DefaultMessageFormatter ^
+    --property print.key=true ^
+    --property print.value=true ^
+    --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer ^
+    --property value.deserializer=org.apache.kafka.common.serialization.LongDeserializer
+	
+	
+zookeeper-server-start.bat config\zookeeper.properties
+kafka-server-start.bat config\server.properties
+connect-standalone.bat csv-connector-source\worker.properties csv-connector-source\spooldir.properties
+
+
+1. Command to create or alter the topic.
+/bin/kafka-topics.bat --create (or) --alter \
+    --bootstrap-server <hostname>:<port> \
+    --topic <topic-name> \
+    --partitions <number-of-partitions> \
+    --replication-factor <number-of-replicating-servers>
+
+2. Command to delete a topic.
+/bin/kafka-topics.bat --delete \
+    --bootstrap-server <hostname>:<port> \
+    --topic <topic-name> 
+	
+3. Command to list a topic
+/bin/kafka-topics.bat --list \
+    --bootstrap-server <hostname>:<port> \
+
+4. Command to produce a data into topic.
+/bin/kafka-console-producer.bat \
+    --broker-list <hostname>:<port> \
+    --topic <topic-name> 
+	
+5. Command to consume a data from topic.
+/bin/kafka-console-consumer.bat \
+    --bootstrap-server <hostname>:<port> \
+    --topic <topic-name> \
+    --from-beginning	
+
+6. Command to consume a data from topic using consumer group.
+/bin/kafka-console-consumer.bat \
+    --bootstrap-server <hostname>:<port> \
+    --topic <topic-name> \
+	--group <group-name>
+    --from-beginning		
+
+7. Command to list out consumer group.
+/bin/kafka-consumer-groups.bat \
+    --bootstrap-server <hostname>:<port> \
+	--list
+	
+8. Command to describe a consumer group.
+/bin/kafka-consumer-groups.bat \
+    --bootstrap-server <hostname>:<port> \
+	--describe
+	--group <group-name>
+
+9. Command to reset offset of consumer group.
+/bin/kafka-consumer-groups.bat \
+    --bootstrap-server <hostname>:<port> \
+	--group <group-name>
+	--topic <topic-name> or allTopics
+	--reset-offset <--to-earliest> //theses option will find out in doc
+	--execute
+	
+	
+
